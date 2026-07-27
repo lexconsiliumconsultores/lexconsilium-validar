@@ -58,29 +58,29 @@ footer { text-align: center; padding: 20px; font-size: 12px; color: #999; }
 <body>
 <header>
 <h1><strong>LexConsilium</strong> | Validar Documento</h1>
-<p>Verifique y descargue documentos firmados electrónicamente</p>
+<p>Verifique y descargue documentos firmados electrÃ³nicamente</p>
 </header>
 <div class="container">
 <div class="card">
 <div class="tabs">
 <div class="tab active" onclick="switchTab('upload')">Subir PDF</div>
-<div class="tab" onclick="switchTab('codigo')">Ingresar Código</div>
+<div class="tab" onclick="switchTab('codigo')">Ingresar CÃ³digo</div>
 </div>
 
 <div id="tab-upload" class="tab-content active">
 <div class="dropzone" id="dropzone">
 <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="12" y1="18" x2="12" y2="12"/><line x1="9" y1="15" x2="12" y2="12"/><line x1="15" y1="15" x2="12" y2="12"/></svg>
-<p>Arrastre el PDF firmado aquí o haga clic para seleccionar</p>
+<p>Arrastre el PDF firmado aquÃ­ o haga clic para seleccionar</p>
 <p class="small">Solo archivos PDF</p>
 </div>
 <input type="file" id="fileInput" accept=".pdf" style="display:none">
 </div>
 
 <div id="tab-codigo" class="tab-content">
-<p style="color:#666;font-size:14px;">Ingrese el Folio y Código de Verificación que aparecen en el documento firmado para descargarlo.</p>
+<p style="color:#666;font-size:14px;">Ingrese el Folio y CÃ³digo de VerificaciÃ³n que aparecen en el documento firmado para descargarlo.</p>
 <div class="input-group">
-<input class="input-field" id="inputFolio" type="text" placeholder="Folio (6 dígitos)" maxlength="6" inputmode="numeric">
-<input class="input-field" id="inputCodigo" type="text" placeholder="Código de verificación (12 caracteres)" maxlength="12" style="text-transform:uppercase">
+<input class="input-field" id="inputFolio" type="text" placeholder="Folio (6 dÃ­gitos)" maxlength="6" inputmode="numeric">
+<input class="input-field" id="inputCodigo" type="text" placeholder="CÃ³digo de verificaciÃ³n (12 caracteres)" maxlength="12" style="text-transform:uppercase">
 <button class="btn btn-primary" id="btnBuscar" onclick="buscarDocumento()">Buscar Documento</button>
 </div>
 </div>
@@ -93,14 +93,14 @@ footer { text-align: center; padding: 20px; font-size: 12px; color: #999; }
 
 <div id="resultado" class="hidden">
 <div class="card">
-<h2 style="font-size:18px;margin-bottom:8px;color:#1a3a5c;" id="resultTitle">Información del Documento</h2>
+<h2 style="font-size:18px;margin-bottom:8px;color:#1a3a5c;" id="resultTitle">InformaciÃ³n del Documento</h2>
 <div id="badgeContainer" style="margin-top:15px;"></div>
 <div class="info-grid" id="infoGrid"></div>
 <div class="download-area" id="downloadArea"></div>
 </div>
 </div>
 </div>
-<footer>LexConsilium Consultores &mdash; Validación de Firmas Electrónicas</footer>
+<footer>LexConsilium Consultores &mdash; ValidaciÃ³n de Firmas ElectrÃ³nicas</footer>
 
 <script>
 pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
@@ -163,9 +163,16 @@ const ctx = canvas.getContext('2d');
 await page.render({ canvasContext: ctx, viewport: vp }).promise;
 const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
 const code = jsQR(imageData.data, imageData.width, imageData.height);
-if (!code) { showError('No se encontró ningún código QR en la última página.'); return; }
+if (!code) { showError('No se encontrÃ³ ningÃºn cÃ³digo QR en la Ãºltima pÃ¡gina.'); return; }
 let data;
-try { data = JSON.parse(code.data); } catch(e) { showError('El código QR no contiene datos de firma válidos.'); return; }
+if (code.data.startsWith('http')) {
+try {
+const u = new URL(code.data);
+data = Object.fromEntries(u.searchParams.entries());
+} catch(e) { showError('El cÃ³digo QR no contiene datos de firma vÃ¡lidos.'); return; }
+} else {
+try { data = JSON.parse(code.data); } catch(e) { showError('El cÃ³digo QR no contiene datos de firma vÃ¡lidos.'); return; }
+}
 showData(data, file);
 } catch (e) { showError('Error al leer el PDF: ' + e.message); }
 finally { hideLoading(); }
@@ -174,14 +181,14 @@ finally { hideLoading(); }
 async function buscarDocumento() {
 const folio = document.getElementById('inputFolio').value.trim();
 const codigo = document.getElementById('inputCodigo').value.trim().toUpperCase();
-if (folio.length < 4) { alert('Ingrese un Folio válido (6 dígitos).'); return; }
-if (codigo.length < 8) { alert('Ingrese un Código de verificación válido (12 caracteres).'); return; }
+if (folio.length < 4) { alert('Ingrese un Folio vÃ¡lido (6 dÃ­gitos).'); return; }
+if (codigo.length < 8) { alert('Ingrese un CÃ³digo de verificaciÃ³n vÃ¡lido (12 caracteres).'); return; }
 showLoading('Buscando documento...');
 resultado.classList.add('hidden');
 try {
 const url = `https://raw.githubusercontent.com/${REPO}/main/documentos/${folio}-${codigo}.pdf`;
 const resp = await fetch(url);
-if (!resp.ok) { showError('Documento no encontrado. Verifique el Folio y Código ingresados.'); return; }
+if (!resp.ok) { showError('Documento no encontrado. Verifique el Folio y CÃ³digo ingresados.'); return; }
 const blob = await resp.blob();
 const file = new File([blob], `${folio}-${codigo}.pdf`, { type: 'application/pdf' });
 await processFile(file);
@@ -192,15 +199,15 @@ finally { hideLoading(); }
 
 function showData(data, file) {
 resultado.classList.remove('hidden');
-resultadoTitle.textContent = 'Información del Documento';
-badgeContainer.innerHTML = '<span class="badge badge-valido">FIRMA ELECTRÓNICA</span>';
+resultadoTitle.textContent = 'InformaciÃ³n del Documento';
+badgeContainer.innerHTML = '<span class="badge badge-valido">FIRMA ELECTRÃ“NICA</span>';
 const rows = [
-['Folio', data.folio || '—'],
-['Código de Verificación', '<strong style="font-size:16px;letter-spacing:1px;">' + (data.codigo || '—') + '</strong>'],
-['Firmante', data.firmante || '—'],
-['Fecha de Firma', data.fecha || '—'],
-['Algoritmo', data.algoritmo || '—'],
-['Hash SHA256', (data.hash || '—')],
+['Folio', data.folio || 'â€”'],
+['CÃ³digo de VerificaciÃ³n', '<strong style="font-size:16px;letter-spacing:1px;">' + (data.codigo || 'â€”') + '</strong>'],
+['Firmante', data.firmante || 'â€”'],
+['Fecha de Firma', data.fecha || 'â€”'],
+['Algoritmo', data.algoritmo || 'â€”'],
+['Hash SHA256', (data.hash || 'â€”')],
 ];
 if (file) rows.push(['Archivo', file.name]);
 infoGrid.innerHTML = rows.map(([l, v]) => '<div class="info-label">' + l + '</div><div class="info-value">' + v + '</div>').join('');
